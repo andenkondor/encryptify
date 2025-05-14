@@ -13,18 +13,20 @@ Recipient(s): ${recipients.join("; ")}
 // mySuperSecretPassword`;
 
 const { creator } = argv;
-const mailAddresses = await $`gpg --list-keys`
+const allMailAddresses = await $`gpg --list-keys`
   .pipe($`grep uid`)
   .pipe($`awk '{print $NF}'`)
   .pipe($`sed 's/[<>]//g'`)
   .pipe($`grep -v ${creator}`);
 
-const recipients = await $({ input: mailAddresses })`fzf --multi`.lines();
+const chosenRecipients = await $({
+  input: allMailAddresses,
+})`fzf --height 40% --border --multi`.lines();
 
 const secretFile = await tmpfile();
 
 try {
-  await $`echo ${getDefaultContent(creator, recipients)} >> ${secretFile}`;
+  await $`echo ${getDefaultContent(creator, chosenRecipients)} >> ${secretFile}`;
   await $`neovide ${secretFile}`;
   const encryptCmd = [
     "gpg",
@@ -32,7 +34,7 @@ try {
     "--armor",
     "--trust-model",
     "always",
-    ...getRecipientParams([...recipients, creator]),
+    ...getRecipientParams([...chosenRecipients, creator]),
     secretFile,
   ];
 
