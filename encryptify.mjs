@@ -4,10 +4,10 @@ const getRecipientParams = (recipients) =>
   recipients.filter((r) => Boolean(r)).flatMap((r) => ["--recipient", r]);
 
 const getDefaultContent = (creator, recipients) =>
-  `This file was created with https://github.com/andenkondor/encryptify
+  `This message was created with https://github.com/andenkondor/encryptify
 Timestamp of creation: ${new Date().toISOString()}
 ${creator ? "Creator: " + creator : ""}
-Recipients: ${recipients.join("; ")}
+Recipient(s): ${recipients.join("; ")}
 
 // Add your secret stuff here
 // mySuperSecretPassword`;
