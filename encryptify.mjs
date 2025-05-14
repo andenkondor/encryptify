@@ -38,7 +38,7 @@ try {
 
   await $`${encryptCmd}`;
   const encrypted = fs.readFileSync(`${secretFile}.asc`);
-  const decryptCommand = `gpg --decrypt <<EOF
+  const decryptCommand = `gpg --decrypt --quiet <<EOF
 ${encrypted}
 EOF`;
 
