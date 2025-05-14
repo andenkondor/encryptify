@@ -23,11 +23,12 @@ const chosenRecipients = await $({
   input: allMailAddresses,
 })`fzf --height 40% --border --multi`.lines();
 
-const secretFile = await tmpfile();
+const secretFilePath = await tmpfile();
+const encryptedSecretFilePath = secretFilePath + ".asc";
 
 try {
-  await $`echo ${getDefaultContent(creator, chosenRecipients)} >> ${secretFile}`;
-  await $`neovide ${secretFile}`;
+  await $`echo ${getDefaultContent(creator, chosenRecipients)} >> ${secretFilePath}`;
+  await $`neovide ${secretFilePath}`;
   const encryptCmd = [
     "gpg",
     "--encrypt",
@@ -35,17 +36,18 @@ try {
     "--trust-model",
     "always",
     ...getRecipientParams([...chosenRecipients, creator]),
-    secretFile,
+    secretFilePath,
   ];
 
   await $`${encryptCmd}`;
-  const encrypted = fs.readFileSync(`${secretFile}.asc`);
-  const decryptCommand = `gpg --decrypt --quiet <<EOF
-${encrypted}
+
+  const encryptedContent = fs.readFileSync(encryptedSecretFilePath);
+  const decryptCmd = `gpg --decrypt --quiet <<EOF
+${encryptedContent}
 EOF`;
 
-  await $({ input: decryptCommand })`pbcopy`;
-  echo(decryptCommand);
+  await $({ input: decryptCmd })`pbcopy`;
+  echo(decryptCmd);
 } finally {
-  $`rm ${secretFile} ${secretFile}.asc`;
+  $`rm ${secretFilePath} ${encryptedSecretFilePath}`;
 }
