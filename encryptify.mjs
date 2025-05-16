@@ -8,7 +8,7 @@ const getDefaultContent = (creator, recipients) =>
 Timestamp of creation: ${new Date().toISOString()}
 ${creator ? "Creator: " + creator : ""}
 Recipient(s): ${recipients.join("; ")}
-
+-----------------------------------------------------------------------
 // Add your secret stuff here
 // mySuperSecretPassword`;
 
