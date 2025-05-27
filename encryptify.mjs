@@ -23,11 +23,13 @@ const chosenRecipients = await $({
   input: allMailAddresses,
 })`fzf --height 40% --border --multi`.lines();
 
-const secretFilePath = await tmpfile();
+const secretFilePath = await tmpfile(
+  undefined,
+  getDefaultContent(creator, chosenRecipients),
+);
 const encryptedSecretFilePath = secretFilePath + ".asc";
 
 try {
-  await $`echo ${getDefaultContent(creator, chosenRecipients)} >> ${secretFilePath}`;
   await $`neovide ${secretFilePath}`;
   const encryptCmd = [
     "gpg",
