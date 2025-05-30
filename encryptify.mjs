@@ -12,7 +12,7 @@ Recipient(s): ${recipients.join("; ")}
 // Add your secret stuff here
 // mySuperSecretPassword`;
 
-const { creator } = argv;
+const { creator, editor } = argv;
 const allMailAddresses = await $`gpg --list-keys`
   .pipe($`grep uid`)
   .pipe($`awk '{print $NF}'`)
@@ -30,7 +30,7 @@ const secretFilePath = await tmpfile(
 const encryptedSecretFilePath = secretFilePath + ".asc";
 
 try {
-  await $`neovide ${secretFilePath}`;
+  await $`${[...(editor ?? "neovide").split(" "), secretFilePath]}`;
   const encryptCmd = [
     "gpg",
     "--encrypt",
