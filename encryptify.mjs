@@ -19,10 +19,10 @@ Message was created for ${recipients.length} recipient(s)
 // mySuperSecretPassword`;
 
 const { creator, editor } = argv;
-const allMailAddresses = await $`gpg --list-keys`
-  .pipe($`grep uid`)
-  .pipe($`awk '{print $NF}'`)
-  .pipe($`sed 's/[<>]//g'`)
+const allMailAddresses = await $`gpg --list-keys --with-colons`
+  .pipe($`grep '^uid:'`)
+  .pipe($`awk -F':' '{print $(9+1)}'`)
+  .pipe($`awk 'match($0, /<[^>]*>/) { print substr($0, RSTART+1, RLENGTH-2) }'`)
   .pipe($`grep -v ${creator}`);
 
 const chosenRecipients = await $({
