@@ -1,6 +1,7 @@
 #!/usr/bin/env zx
 
 $.quiet = true;
+
 const getDefaultKey = async () => {
   const signOutput = (
     await $`echo "lololol" | gpg --sign --verbose --armor`
@@ -52,7 +53,14 @@ const secretFilePath = await tmpfile(
 const encryptedSecretFilePath = secretFilePath + ".asc";
 
 try {
+  const lastModifiedSecret = (await $`stat -f %m ${secretFilePath}`).text();
   await $`${[...(editor ?? "neovide").split(" "), secretFilePath]}`;
+
+  if (lastModifiedSecret === (await $`stat -f %m ${secretFilePath}`).text()) {
+    echo(chalk.red("file hasn't changed."));
+    process.exit(1);
+  }
+
   const encryptCmd = [
     "gpg",
     "--encrypt",
