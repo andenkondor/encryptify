@@ -10,7 +10,7 @@ Encryptify is a command-line utility that helps you create and share encrypted m
 
 - Interactive recipient selection using fzf
 - Automatic GPG key management
-- Secure message creation with editor
+- Secure message creation with arbitrary editor
 - Automatic clipboard copying of decryption command
 - Support for multiple recipients
 - ASCII-armored output for easy sharing
@@ -35,7 +35,7 @@ brew install andenkondor/zapfhahn/encryptify
 Run the script:
 
 ```bash
-enc --creator my.email@address.com
+enc
 ```
 
 The script will:
@@ -52,7 +52,7 @@ The script will:
 1. The script reads your GPG keyring to get available recipients
 2. You can select multiple recipients using fzf
 3. A temporary file is created with a default template
-4. Neovide opens for you to edit the message
+4. Neovide (or any other editor) opens for you to edit the message
 5. The message is encrypted using GPG with the selected recipients
 6. The decryption command is copied to your clipboard for easy sharing
 
@@ -63,10 +63,10 @@ But you can use any editor with arbitrary parameters:
 
 ```bash
 # IntelliJ
-enc --creator --editor "idea --wait"
+enc --editor "idea --wait"
 
 # Visual Studio Code
-enc --creator --editor "code --wait"
+enc --editor "code --wait"
 ```
 
 ## Security

@@ -1,5 +1,19 @@
 #!/usr/bin/env zx
 
+$.quiet = true;
+const getDefaultKey = async () => {
+  const signOutput = (
+    await $`echo "lololol" | gpg --sign --verbose --armor`
+  ).lines();
+
+  const signMetadata = signOutput.slice(
+    0,
+    signOutput.findIndex((line) => line === "-----BEGIN PGP MESSAGE-----"),
+  );
+
+  return signMetadata.at(-1).match(/<([^>]+)>/)[1];
+};
+
 const getRecipientParams = (recipients) => {
   // If there are multiple recipients they should not know about each other
   // > 2 because the creator is also added as a recipient
@@ -16,9 +30,11 @@ ${creator ? "Creator: " + creator : ""}
 Message was created for ${recipients.length} recipient(s)
 -----------------------------------------------------------------------
 // Add your secret stuff here
-// mySuperSecretPassword`;
+// mySuperSecretPassword123`;
 
-const { creator, editor } = argv;
+const { editor } = argv;
+
+const creator = await getDefaultKey();
 const allMailAddresses = await $`gpg --list-keys --with-colons`
   .pipe($`grep '^uid:'`)
   .pipe($`awk -F':' '{print $(9+1)}'`)
