@@ -62,10 +62,6 @@ The script will:
 - No sensitive data is stored on disk
 - Uses ASCII-armored output for safe transmission
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ## License
 
 This project is open source and available under the MIT License.
