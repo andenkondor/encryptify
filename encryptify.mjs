@@ -24,7 +24,7 @@ function getRecipientParams(...recipients) {
 function getDefaultContent(author, recipients) {
   return `This message was created with https://github.com/andenkondor/encryptify
 Timestamp of creation: ${new Date().toISOString()}
-${author ? "author: " + author : ""}
+Author: ${author}
 Message was created for ${recipients.length} recipient(s)
 -----------------------------------------------------------------------
 // Add your secret stuff here
