@@ -2,7 +2,7 @@
 
 $.quiet = true;
 
-const getDefaultKey = async () => {
+async function getDefaultKey() {
   const signOutput = (
     await $`echo "lololol" | gpg --sign --verbose --armor`
   ).lines();
@@ -13,74 +13,99 @@ const getDefaultKey = async () => {
   );
 
   return signMetadata.at(-1).match(/<([^>]+)>/)[1];
-};
+}
 
-const getRecipientParams = (recipients) => {
-  // If there are multiple recipients they should not know about each other
-  // > 2 because the creator is also added as a recipient
-  const recipientFlag =
-    recipients.length > 2 ? "--hidden-recipient" : "--recipient";
+function getRecipientParams(...recipients) {
   return recipients
     .filter((r) => Boolean(r))
-    .flatMap((r) => [recipientFlag, r]);
-};
-const getDefaultContent = (creator, recipients) =>
-  `This message was created with https://github.com/andenkondor/encryptify
+    .flatMap((r) => ["--hidden-recipient", r]);
+}
+
+function getDefaultContent(author, recipients) {
+  return `This message was created with https://github.com/andenkondor/encryptify
 Timestamp of creation: ${new Date().toISOString()}
-${creator ? "Creator: " + creator : ""}
+${author ? "author: " + author : ""}
 Message was created for ${recipients.length} recipient(s)
 -----------------------------------------------------------------------
 // Add your secret stuff here
 // mySuperSecretPassword123`;
+}
 
-const { editor } = argv;
+async function getRecipients(author) {
+  const allMailAddresses = await $`gpg --list-keys --with-colons`
+    .pipe($`grep '^uid:'`)
+    .pipe($`awk -F':' '{print $(9+1)}'`)
+    .pipe(
+      $`awk 'match($0, /<[^>]*>/) { print substr($0, RSTART+1, RLENGTH-2) }'`,
+    )
+    .pipe($`grep -v ${author}`);
 
-const creator = await getDefaultKey();
-const allMailAddresses = await $`gpg --list-keys --with-colons`
-  .pipe($`grep '^uid:'`)
-  .pipe($`awk -F':' '{print $(9+1)}'`)
-  .pipe($`awk 'match($0, /<[^>]*>/) { print substr($0, RSTART+1, RLENGTH-2) }'`)
-  .pipe($`grep -v ${creator}`);
+  return $({
+    input: allMailAddresses,
+  })`fzf --height 40% --border --multi`.lines();
+}
 
-const chosenRecipients = await $({
-  input: allMailAddresses,
-})`fzf --height 40% --border --multi`.lines();
+async function getSecretFiles(defaultContent) {
+  const secretFilePath = await tmpfile(undefined, defaultContent);
+  const encryptedSecretFilePath = secretFilePath + ".asc";
 
-const secretFilePath = await tmpfile(
-  undefined,
-  getDefaultContent(creator, chosenRecipients),
-);
-const encryptedSecretFilePath = secretFilePath + ".asc";
+  const cleanUpCallback = () =>
+    $`rm ${secretFilePath} ${encryptedSecretFilePath}`;
 
-try {
-  const lastModifiedSecret = (await $`stat -f %m ${secretFilePath}`).text();
+  return [secretFilePath, encryptedSecretFilePath, cleanUpCallback];
+}
+
+async function captureUserInput(secretFilePath, editor) {
+  const getLastModified = async () =>
+    (await $.sync`stat -f %m ${secretFilePath}`).text();
+
+  const lastModifiedBaseline = await getLastModified();
   await $`${[...(editor ?? "neovide").split(" "), secretFilePath]}`;
 
-  if (lastModifiedSecret === (await $`stat -f %m ${secretFilePath}`).text()) {
+  if (lastModifiedBaseline === (await getLastModified())) {
     echo(chalk.red("file hasn't changed."));
     process.exit(1);
   }
+}
 
-  const encryptCmd = [
-    "gpg",
-    "--encrypt",
-    "--sign",
-    "--armor",
-    ...["--trust-model", "always"],
-    ...getRecipientParams([...chosenRecipients, creator]),
-    secretFilePath,
-  ];
-
-  await $`${encryptCmd}`;
-
+async function produceOutput(encryptedSecretFilePath, recipients) {
   const encryptedContent = fs.readFileSync(encryptedSecretFilePath);
   const decryptCmd = `gpg --decrypt --quiet <<EOF
 ${encryptedContent}
 EOF`;
 
-  echo(chalk.green(`Message encrypted for: ${chosenRecipients.join(", ")}`));
   await $({ input: decryptCmd })`pbcopy`;
+
+  echo(chalk.green(`Message encrypted for: ${recipients.join(", ")}`));
   echo(decryptCmd);
-} finally {
-  $`rm ${secretFilePath} ${encryptedSecretFilePath}`;
 }
+
+async function main() {
+  const { editor } = argv;
+
+  const author = await getDefaultKey();
+  const recipients = await getRecipients(author);
+  const [secretFilePath, encryptedSecretFilePath, cleanUpFiles] =
+    await getSecretFiles(getDefaultContent(author, recipients));
+
+  try {
+    await captureUserInput(secretFilePath, editor);
+
+    await $`${[
+      "gpg",
+      "--encrypt",
+      "--sign",
+      "--armor",
+      ...["--trust-model", "always"],
+      ...getRecipientParams(author),
+      ...getRecipientParams(recipients),
+      secretFilePath,
+    ]}`;
+
+    await produceOutput(encryptedSecretFilePath, recipients);
+  } finally {
+    await cleanUpFiles();
+  }
+}
+
+await main();
