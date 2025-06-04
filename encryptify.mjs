@@ -42,7 +42,18 @@ async function getRecipients(author) {
 
   return $({
     input: allMailAddresses,
-  })`fzf --height 40% --border --multi`.lines();
+  })`${[
+    "fzf",
+    "--border",
+    "--multi",
+    "--reverse",
+    "--height=~100%",
+    "--prompt=select recipient(s): ",
+    "--color=fg:#d0d0d0,fg+:#d0d0d0,bg:#121212,bg+:#262626",
+    "--color=hl:#5f87af,hl+:#5fd7ff,info:#afaf87,marker:#87ff00",
+    "--color=prompt:#d7005f,spinner:#af5fff,pointer:#af5fff,header:#87afaf",
+  ]}
+`.lines();
 }
 
 async function getSecretFiles(defaultContent) {
