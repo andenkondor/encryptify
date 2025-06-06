@@ -71,9 +71,14 @@ async function captureUserInput(secretFilePath, editor) {
     (await $.sync`stat -f %m ${secretFilePath}`).text();
 
   const lastModifiedBaseline = await getLastModified();
-  await (editor
-    ? $`${[...editor.split(" "), secretFilePath]}`
-    : $`nvim +startinsert! ${secretFilePath} < /dev/ttys000 > /dev/ttys000`);
+
+  if (Boolean(editor)) {
+    await $`${[...editor.split(" "), secretFilePath]}`;
+  } else {
+    $.spawnSync("nvim", [secretFilePath], {
+      stdio: "inherit",
+    });
+  }
 
   if (lastModifiedBaseline === (await getLastModified())) {
     echo(chalk.red("file hasn't changed."));
