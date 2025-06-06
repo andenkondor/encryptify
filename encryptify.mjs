@@ -88,7 +88,7 @@ async function captureUserInput(secretFilePath, editor) {
 
 async function produceOutput(encryptedSecretFilePath, recipients) {
   const encryptedContent = fs.readFileSync(encryptedSecretFilePath);
-  const decryptCmd = `gpg --decrypt --quiet <<EOF | vim -
+  const decryptCmd = `gpg --decrypt --quiet <<EOF | vim -m -M -
 ${encryptedContent}
 EOF`;
 
