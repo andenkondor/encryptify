@@ -68,7 +68,7 @@ async function getSecretFiles(defaultContent) {
 
 async function captureUserInput(secretFilePath, editor) {
   const getLastModified = async () =>
-    (await $.sync`stat -f %m ${secretFilePath}`).text();
+    (await $`stat -f %m ${secretFilePath}`).text();
 
   const lastModifiedBaseline = await getLastModified();
 
