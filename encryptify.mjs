@@ -43,6 +43,7 @@ async function getRecipients(author) {
   })`${[
     "fzf",
     "--border",
+    "--exact",
     "--multi",
     "--reverse",
     "--height=~100%",
