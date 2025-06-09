@@ -64,19 +64,16 @@ async function getSecretFiles(defaultContent) {
   return [secretFilePath, encryptedSecretFilePath, cleanUpCallback];
 }
 
-async function captureUserInput(secretFilePath, editor) {
+async function captureUserInput(secretFilePath) {
   const getLastModified = async () =>
     (await $`stat -f %m ${secretFilePath}`).text();
 
   const lastModifiedBaseline = await getLastModified();
 
-  if (editor) {
-    await $`${[...editor.split(" "), secretFilePath]}`;
-  } else {
-    $.spawnSync("nvim", [secretFilePath], {
-      stdio: "inherit",
-    });
-  }
+  const [editor, ...editorArgs] = process.env.EDITOR.split(" ");
+  $.spawnSync(editor, [...editorArgs, secretFilePath], {
+    stdio: "inherit",
+  });
 
   if (lastModifiedBaseline === (await getLastModified())) {
     echo(chalk.red("file hasn't changed."));
@@ -97,15 +94,13 @@ EOF`;
 }
 
 async function main() {
-  const { editor } = argv;
-
   const author = await getDefaultKey();
   const recipients = await getRecipients(author);
   const [secretFilePath, encryptedSecretFilePath, cleanUpFiles] =
     await getSecretFiles(getDefaultContent(author, recipients));
 
   try {
-    await captureUserInput(secretFilePath, editor);
+    await captureUserInput(secretFilePath);
 
     await $`${[
       "gpg",

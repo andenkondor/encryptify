@@ -42,31 +42,22 @@ The script will:
 
 1. Show you a list of available GPG keys
 2. Let you select recipients using fzf
-3. Open Neovim editor for you to write your message
+3. Open your default editor for your message
 4. Encrypt the message for all selected recipients
 5. Copy the decryption command to your clipboard
 6. Display the decryption command in the terminal
 
-## How it Works
-
-1. The script reads your GPG keyring to get available recipients
-2. You can select multiple recipients using fzf
-3. A temporary file is created with a default template
-4. Neovim (or any other editor) opens for you to edit the message
-5. The message is encrypted using GPG with the selected recipients
-6. The decryption command is copied to your clipboard for easy sharing
 
 ## Editor
 
-By default encryptify opens the secret file with [Neovim](https://neovim.io/).
-But you can use any editor with arbitrary parameters:
+The editor is taken from `$EDITOR` environment variable.
 
 ```bash
 # IntelliJ
-enc --editor "idea --wait"
+export EDITOR='idea --wait'
 
 # Visual Studio Code
-enc --editor "code --wait"
+export EDITOR='code --wait'
 ```
 
 ## Security
