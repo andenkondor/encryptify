@@ -16,9 +16,7 @@ async function getDefaultKey() {
 }
 
 function getRecipientParams(...recipients) {
-  return recipients
-    .filter((r) => Boolean(r))
-    .flatMap((r) => ["--hidden-recipient", r]);
+  return recipients.filter(Boolean).flatMap((r) => ["--hidden-recipient", r]);
 }
 
 function getDefaultContent(author, recipients) {
@@ -72,7 +70,7 @@ async function captureUserInput(secretFilePath, editor) {
 
   const lastModifiedBaseline = await getLastModified();
 
-  if (Boolean(editor)) {
+  if (editor) {
     await $`${[...editor.split(" "), secretFilePath]}`;
   } else {
     $.spawnSync("nvim", [secretFilePath], {
