@@ -15,10 +15,6 @@ async function getDefaultKey() {
   return signMetadata.at(-1).match(/<([^>]+)>/)[1];
 }
 
-function getRecipientParams(...recipients) {
-  return recipients.filter(Boolean).flatMap((r) => ["--hidden-recipient", r]);
-}
-
 function getDefaultContent(author, recipients) {
   return `This message was created with https://github.com/andenkondor/encryptify
 Timestamp of creation: ${new Date().toISOString()}
@@ -109,8 +105,7 @@ async function main() {
       "--sign",
       "--armor",
       ...["--trust-model", "always"],
-      ...getRecipientParams(author),
-      ...getRecipientParams(recipients),
+      ...[author, ...recipients].flatMap((r) => ["--hidden-recipient", r]),
       secretFilePath,
     ]}`;
 
